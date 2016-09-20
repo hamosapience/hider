@@ -1,6 +1,7 @@
 "use strict";
 
 import template from 'babel-template';
+import dict from './replace_dict';
 
 const CHARSET = ("abcdefghijklmnopqrstuvwxyz" +
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ$_").split("");
@@ -60,6 +61,14 @@ module.exports = ({ types: t, traverse }) => {
                     return;
                 }
 
+                path.node[seen] = true;
+
+                if (dict[node.value] && Math.random() > 0.5) {
+                    const replacement = template(dict[node.value])();
+                    path.replaceWith(replacement);
+                    return;
+                }
+
                 const stringChunks = splitString(node.value);
                 const bindings = scope.getAllBindings();
                 const used = new Set();
@@ -97,8 +106,6 @@ module.exports = ({ types: t, traverse }) => {
 
                 const replacement = template(getConcatenated(varNames))();
                 path.replaceWith(replacement);
-
-                path.node[seen] = true;
             },
         },
     };
