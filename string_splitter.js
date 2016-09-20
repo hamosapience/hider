@@ -85,18 +85,17 @@ module.exports = ({ types: t, traverse }) => {
                     return next;
                 });
 
-                const variableDeclarations = stringChunks.map((chunk, i) => {
+                stringChunks.forEach((chunk, i) => {
                     const stringLiteral = t.stringLiteral(chunk);
                     stringLiteral[seen] = true;
 
-                    return t.variableDeclaration("var", [
-                        t.variableDeclarator(t.identifier(varNames[i]), stringLiteral)
-                    ]);
+                    scope.push({
+                        id: t.identifier(varNames[i]),
+                        init: stringLiteral
+                    });
                 });
 
                 const replacement = template(getConcatenated(varNames))();
-
-                path.parentPath.parentPath.insertBefore(variableDeclarations);
                 path.replaceWith(replacement);
 
                 path.node[seen] = true;

@@ -29,7 +29,9 @@ const babiliPlugins = [
 ];
 
 const pluginFilter = () => {
-    return true;
+    if (Math.random() > 0.5) {
+        return true;
+    }
 };
 
 var fileName = process.argv[2];
