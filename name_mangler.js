@@ -267,8 +267,11 @@ class Charset {
         }
 
         do {
-            const randomIndex = Math.floor(Math.random() * (this.chars.length - 1));
-            const randomChar = this.chars[randomIndex];
+            const randomIndex1 = Math.floor(Math.random() * (this.chars.length - 1));
+            const randomIndex2 = Math.floor(Math.random() * (this.chars.length - 1));
+            const twoLetters = Math.random() > 0.5;
+
+            const randomChar = this.chars[randomIndex1] + (twoLetters ? this.chars[randomIndex2] : '');
 
             if (!this.used.has(randomChar)) {
                 this.used.add(randomChar);

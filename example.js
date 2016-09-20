@@ -4,6 +4,8 @@ function bar(x, y) {
     var foo = x + y;
     var bar = x - y;
 
+    var s = "somelongstring";
+
     var r = "r";
     var bs = "bs";
     var o = "o";

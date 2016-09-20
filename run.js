@@ -8,6 +8,7 @@ var moriscript = require('./moriscript');
 var nameMangler = require('./name_mangler');
 var constantFolding = require('./constant_folding');
 var minifyReplace = require('./minify_replace');
+var stringSplitter = require('./string_splitter');
 
 var windowReplacer = [minifyReplace, {
     "replacements": [{
@@ -18,6 +19,18 @@ var windowReplacer = [minifyReplace, {
         }
     }]
 }];
+
+const babiliPlugins = [
+    "babel-plugin-minify-simplify",
+    "babel-plugin-minify-type-constructors",
+    "babel-plugin-transform-member-expression-literals",
+    "babel-plugin-transform-merge-sibling-variables",
+    "babel-plugin-transform-property-literals"
+];
+
+const pluginFilter = () => {
+    return true;
+};
 
 var fileName = process.argv[2];
 
@@ -30,8 +43,9 @@ fs.readFile(fileName, function(err, data) {
     plugins: [
         nameMangler,
         constantFolding,
-        windowReplacer
-    ]
+        windowReplacer,
+        stringSplitter
+    ].concat(babiliPlugins.filter(pluginFilter))
   });
 
   console.log(out.code);
