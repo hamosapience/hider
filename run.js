@@ -28,7 +28,7 @@ const babiliPlugins = [
     "babel-plugin-minify-simplify",
     "babel-plugin-minify-type-constructors",
     "babel-plugin-transform-member-expression-literals",
-    "babel-plugin-transform-merge-sibling-variables",
+    // "babel-plugin-transform-merge-sibling-variables",
 ];
 
 const pluginFilter = () => {
@@ -50,9 +50,9 @@ fs.readFile(fileName, function(err, data) {
       comments: false,
       plugins: [
           replacer,
+          constantFolding,
           stringSplitter,
           nameMangler,
-          constantFolding,
       ].concat(babiliAlwaysPlugins).concat(babiliPlugins.filter(pluginFilter)),
   });
 

