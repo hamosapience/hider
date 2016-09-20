@@ -1,11 +1,9 @@
 "use strict";
 
 import template from 'babel-template';
-import generate from "babel-generator";
 
 const CHARSET = ("abcdefghijklmnopqrstuvwxyz" +
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ$_").split("");
-
 
 const splitString = (s) => {
     const len = s.length;
@@ -26,6 +24,21 @@ const splitString = (s) => {
     return chunks;
 };
 
+const getConcatenated = (vars) => {
+    const choose = Math.random() * 3;
+
+    if (choose < 1) {
+        return vars.slice(1).reduce((str, varName) => {
+            str += `+${varName}`;
+            return str;
+        }, vars[0]);
+    } else if (choose < 2) {
+        return `[${vars.join(',')}].join('')`;
+    } else {
+        return `[${vars.join(',')}].reduce(function(s,v) { s += v; return s; }, '')`;
+    }
+};
+
 const hop = Object.prototype.hasOwnProperty;
 
 module.exports = ({ types: t, traverse }) => {
@@ -37,61 +50,56 @@ module.exports = ({ types: t, traverse }) => {
 
             Expression(path) {
 
-                if (path.isStringLiteral()) {
-                    const { node, scope } = path;
-
-                    if (node[seen]) {
-                        return;
-                    }
-
-                    const stringChunks = splitString(node.value);
-                    const bindings = scope.getAllBindings();
-                    const used = new Set();
-
-
-                    const getNext = () => {
-                        const randomIndex1 = Math.floor(Math.random() * (CHARSET.length - 1));
-                        const randomIndex2 = Math.floor(Math.random() * (CHARSET.length - 1));
-                        return CHARSET[randomIndex1] + CHARSET[randomIndex2];
-                    };
-
-                    const varNames = stringChunks.map(() => {
-                        let next;
-                        do {
-                            next = getNext();
-                        } while (
-                            hop.call(bindings, next)
-                            || scope.hasGlobal(next)
-                            || scope.hasReference(next)
-                            || used.has(next)
-                        );
-
-                        used.add(next);
-                        return next;
-                    });
-
-                    const declarationTemplate = template(`
-                        var NAME = VALUE;
-                    `);
-
-                    const code = stringChunks.map((chunk, i) => {
-                        return declarationTemplate({
-                            NAME: t.identifier(varNames[i]),
-                            VALUE: t.stringLiteral(chunk)
-                        });
-                    });
-
-                    const newNode = code[0];
-                    newNode[seen] = true;
-                    path.replaceWith(newNode);
+                if (!path.isStringLiteral()) {
+                    return;
                 }
-                //
-                // const res = path.evaluate();
-                // if (res.confident) {
-                //     const node = t.valueToNode(res.value);
-                //     node[seen] = true;
-                //     path.replaceWith(node);
-                // }
+
+                const { node, scope } = path;
+
+                if (node[seen] || node.value.length < 3) {
+                    return;
+                }
+
+                const stringChunks = splitString(node.value);
+                const bindings = scope.getAllBindings();
+                const used = new Set();
+
+                const getNext = () => {
+                    const randomIndex1 = Math.floor(Math.random() * (CHARSET.length - 1));
+                    const randomIndex2 = Math.floor(Math.random() * (CHARSET.length - 1));
+                    return CHARSET[randomIndex1] + CHARSET[randomIndex2];
+                };
+
+                const varNames = stringChunks.map(() => {
+                    let next;
+                    do {
+                        next = getNext();
+                    } while (
+                        hop.call(bindings, next)
+                        || scope.hasGlobal(next)
+                        || scope.hasReference(next)
+                        || used.has(next)
+                    );
+
+                    used.add(next);
+                    return next;
+                });
+
+                const variableDeclarations = stringChunks.map((chunk, i) => {
+                    const stringLiteral = t.stringLiteral(chunk);
+                    stringLiteral[seen] = true;
+
+                    return t.variableDeclaration("var", [
+                        t.variableDeclarator(t.identifier(varNames[i]), stringLiteral)
+                    ]);
+                });
+
+                const replacement = template(getConcatenated(varNames))();
+
+                path.parentPath.parentPath.insertBefore(variableDeclarations);
+                path.replaceWith(replacement);
+
+                path.node[seen] = true;
             },
         },
     };
