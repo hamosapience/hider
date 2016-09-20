@@ -78,7 +78,7 @@ module.exports = ({ types: t, traverse }) => {
     );
 
     const decryptFunc = template(decryptFunctionText)();
-    const decryptFuncExpr = t.functionExpression(null, [], decryptFunc);
+    const decryptFuncExpr = t.functionExpression(null, [t.identifier('hash'), t.identifier('key')], decryptFunc);
 
     let decryptorInjected = false;
 

@@ -1,3 +1,3 @@
 export default {
-    decrypt: ['xGet', '__get', 'xRead', '_read', 'parse', 'xParse', 'proc']
+    decrypt: ['xGet', '_get', 'xRead', '_read', 'parse', 'xParse', 'proc']
 }

