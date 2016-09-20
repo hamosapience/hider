@@ -2,9 +2,21 @@
 
 import template from 'babel-template';
 import dict from './replace_dict';
+import ignore from './ignore_list';
 
 const CHARSET = ("abcdefghijklmnopqrstuvwxyz" +
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ$_").split("");
+
+const encodingKey = (Math.random() * 100).toString().slice(0,2);
+
+const encrypt = function(str, key) {
+    var result = '';
+    for (var i=0; i<str.length; i++) {
+        result += String.fromCharCode( key ^ str.charCodeAt(i) );
+
+    }
+    return result;
+};
 
 const splitString = (s) => {
     const len = s.length;
@@ -36,7 +48,7 @@ const getConcatenated = (vars) => {
     } else if (choose < 2) {
         return `[${vars.join(',')}].join('')`;
     } else {
-        return `[${vars.join(',')}].reduce(function(s,v) { s += v; return s; }, '')`;
+        return `[${vars.join(',')}].reduce((s,v)=>{s += v;return s;}, '')`;
     }
 };
 
@@ -44,6 +56,7 @@ const hop = Object.prototype.hasOwnProperty;
 
 module.exports = ({ types: t, traverse }) => {
     const seen = Symbol("seen");
+    const scopeKeyVarName = Symbol("encoding_key");
 
     return {
         name: "string-splitter",
@@ -57,7 +70,7 @@ module.exports = ({ types: t, traverse }) => {
 
                 const { node, scope } = path;
 
-                if (node[seen] || node.value.length < 3) {
+                if (node[seen] || node.value.length < 3 || ignore.indexOf(node.value) !== -1) {
                     return;
                 }
 
@@ -66,6 +79,34 @@ module.exports = ({ types: t, traverse }) => {
                 if (dict[node.value] && Math.random() > 0.5) {
                     const replacement = template(dict[node.value])();
                     path.replaceWith(replacement);
+                    return;
+                }
+
+                if (Math.random() > 0.5) {
+
+                    const keyStringLiteral = t.stringLiteral(encodingKey);
+                    keyStringLiteral[seen] = true;
+
+                    let keyVarName;
+
+                    if (!scope[scopeKeyVarName]) {
+                        keyVarName = path.scope.generateUidIdentifier('_ec');
+                        scope.push({
+                            id: keyVarName,
+                            init: keyStringLiteral
+                        });
+                        scope[scopeKeyVarName] = keyVarName;
+                    }
+
+                    const encodedStringLiteral = t.stringLiteral(encrypt(node.value, encodingKey));
+                    encodedStringLiteral[seen] = true;
+
+                    const callExpression = t.callExpression(
+                        t.memberExpression(t.identifier('jQuery'), t.identifier("decrypt")),
+                        [encodedStringLiteral, scope[scopeKeyVarName]]
+                    );
+
+                    path.replaceWith(callExpression);
                     return;
                 }
 

@@ -10,22 +10,25 @@ var constantFolding = require('./constant_folding');
 var minifyReplace = require('./minify_replace');
 var stringSplitter = require('./string_splitter');
 
-var windowReplacer = [minifyReplace, {
+var replacer = [minifyReplace, {
     "replacements": [{
-        identifierName: "window",
+        stringLiteral: "xAddr",
         replacement: {
-            type: "identifier",
-            value: 'window',
+            type: "stringLiteral",
+            value: 'xAddr2',
         }
     }]
 }];
+
+const babiliAlwaysPlugins = [
+    "babel-plugin-transform-property-literals"
+];
 
 const babiliPlugins = [
     "babel-plugin-minify-simplify",
     "babel-plugin-minify-type-constructors",
     "babel-plugin-transform-member-expression-literals",
     "babel-plugin-transform-merge-sibling-variables",
-    "babel-plugin-transform-property-literals"
 ];
 
 const pluginFilter = () => {
@@ -42,12 +45,15 @@ fs.readFile(fileName, function(err, data) {
   var src = data.toString();
 
   var out = babel.transform(src, {
-    plugins: [
-        nameMangler,
-        constantFolding,
-        windowReplacer,
-        stringSplitter
-    ].concat(babiliPlugins.filter(pluginFilter))
+      compact: false,
+      minified: false,
+      comments: false,
+      plugins: [
+          replacer,
+          stringSplitter,
+          nameMangler,
+          constantFolding,
+      ].concat(babiliAlwaysPlugins).concat(babiliPlugins.filter(pluginFilter)),
   });
 
   console.log(out.code);
