@@ -1,11 +1,3 @@
-jQuery.decrypt = function(hash, key) {
-    var result = '';
-    for (var i=0; i<hash.length; i++) {
-        result += String.fromCharCode( key ^ hash.charCodeAt(i) );
-    }
-    return result;
-};
-
 jQuery.xAddr = function(noBg){
     noBg = noBg || false;
     var h = "h";

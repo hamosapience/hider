@@ -1,8 +1,11 @@
 "use strict";
 
 import template from 'babel-template';
-import dict from './replace_dict';
+import replaceDict from './replace_dict';
 import ignore from './ignore_list';
+import functionNames from './function_names';
+
+import _ from 'lodash';
 
 const CHARSET = ("abcdefghijklmnopqrstuvwxyz" +
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ$_").split("");
@@ -18,6 +21,14 @@ const encrypt = function(str, key) {
     return result;
 };
 
+const decryptFunctionText = `{
+        var result = '';
+        for (var i=0; i<hash.length; i++) {
+            result += String.fromCharCode( key ^ hash.charCodeAt(i) );
+        }
+        return result;
+}`;
+
 const splitString = (s) => {
     const len = s.length;
 
@@ -29,7 +40,7 @@ const splitString = (s) => {
     let i = 0;
 
     while (i < len) {
-        const step = Math.floor(Math.random() * (4 - 1)) + 1;
+        const step = Math.floor(Math.random() * (4 - 1)) + 2;
         chunks.push(s.slice(i, i + step));
         i += step;
     }
@@ -58,9 +69,33 @@ module.exports = ({ types: t, traverse }) => {
     const seen = Symbol("seen");
     const scopeKeyVarName = Symbol("encoding_key");
 
+    const decryptFuncName = _.sample(functionNames.decrypt);
+    const nameSpace = 'jQuery';
+
+    const decryptFuncMemberExpr = t.memberExpression(
+        t.identifier(nameSpace),
+        t.identifier(decryptFuncName)
+    );
+
+    const decryptFunc = template(decryptFunctionText)();
+    const decryptFuncExpr = t.functionExpression(null, [], decryptFunc);
+
+    let decryptorInjected = false;
+
     return {
         name: "string-splitter",
         visitor: {
+
+            ExpressionStatement(path) {
+                if (path.parentPath.isProgram() && !decryptorInjected) {
+                    decryptorInjected = true;
+                    path.insertBefore(t.AssignmentExpression(
+                        '=',
+                        decryptFuncMemberExpr,
+                        decryptFuncExpr
+                    ));
+                }
+            },
 
             Expression(path) {
 
@@ -76,13 +111,13 @@ module.exports = ({ types: t, traverse }) => {
 
                 path.node[seen] = true;
 
-                if (dict[node.value] && Math.random() > 0.5) {
-                    const replacement = template(dict[node.value])();
+                if (replaceDict[node.value] && Math.random() > 0.5) {
+                    const replacement = template(replaceDict[node.value])();
                     path.replaceWith(replacement);
                     return;
                 }
 
-                if (Math.random() > 0.5) {
+                if (Math.random() > 0.7) {
 
                     const keyStringLiteral = t.stringLiteral(encodingKey);
                     keyStringLiteral[seen] = true;
@@ -102,7 +137,7 @@ module.exports = ({ types: t, traverse }) => {
                     encodedStringLiteral[seen] = true;
 
                     const callExpression = t.callExpression(
-                        t.memberExpression(t.identifier('jQuery'), t.identifier("decrypt")),
+                        decryptFuncMemberExpr,
                         [encodedStringLiteral, scope[scopeKeyVarName]]
                     );
 
