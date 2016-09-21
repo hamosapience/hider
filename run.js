@@ -52,7 +52,7 @@ fs.readFile(fileName, function(err, data) {
           replacer,
           constantFolding,
           stringSplitter,
-          nameMangler,
+          [nameMangler, {blacklist: {_pgrwcm: true}}],
       ].concat(babiliAlwaysPlugins).concat(babiliPlugins.filter(pluginFilter)),
   });
 

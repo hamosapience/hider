@@ -19,14 +19,6 @@ const encrypt = function(str, key) {
     return result;
 };
 
-const decryptFunctionText = `{
-        var result = '';
-        for (var i=0; i<hash.length; i++) {
-            result += String.fromCharCode( key ^ hash.charCodeAt(i) );
-        }
-        return result;
-}`;
-
 const splitString = (s) => {
     const len = s.length;
 
@@ -57,7 +49,7 @@ const getConcatenated = (vars) => {
     } else if (choose < 2) {
         return `[${vars.join(',')}].join('')`;
     } else {
-        return `[${vars.join(',')}].reduce((s,v)=>{s += v;return s;}, '')`;
+        return `[${vars.join(',')}].reduce(function(s,v){s += v;return s;}, '')`;
     }
 };
 
@@ -65,7 +57,7 @@ const hop = Object.prototype.hasOwnProperty;
 
 module.exports = ({ types: t, traverse }) => {
     const seen = Symbol("seen");
-    const scopeKeyVarName = Symbol("encoding_key");
+    const keyInjected = Symbol("injected");
     const encodingKey = (Math.random() * 100).toString().slice(0,2);
 
     const decryptFuncName = _.sample(functionNames.decrypt);
@@ -76,23 +68,19 @@ module.exports = ({ types: t, traverse }) => {
         t.identifier(decryptFuncName)
     );
 
-    const decryptFunc = template(decryptFunctionText)();
-    const decryptFuncExpr = t.functionExpression(null, [t.identifier('hash'), t.identifier('key')], decryptFunc);
-
-    let decryptorInjected = false;
-
     return {
         name: "string-splitter",
         visitor: {
 
-            ExpressionStatement(path) {
-                if (path.parentPath.isProgram() && !decryptorInjected) {
-                    decryptorInjected = true;
-                    path.insertBefore(t.AssignmentExpression(
-                        '=',
-                        decryptFuncMemberExpr,
-                        decryptFuncExpr
-                    ));
+            FunctionExpression(path) {
+                const { node, scope } = path;
+
+                if (scope.hasBinding('_pgrwcm') && !scope[keyInjected]) {
+                    scope.push({
+                        id: t.identifier('$K'),
+                        init: t.stringLiteral(encodingKey)
+                    });
+                    scope[keyInjected] = true;
                 }
             },
 
@@ -110,40 +98,29 @@ module.exports = ({ types: t, traverse }) => {
 
                 path.node[seen] = true;
 
-                if (replaceDict[node.value] && Math.random() > 0.5) {
+                if (replaceDict[node.value] && Math.random() > 0.3) {
                     const replacement = template(replaceDict[node.value])();
                     path.replaceWith(replacement);
                     return;
                 }
 
-                if (Math.random() > 0.5) {
-                    let keyVarName;
-
+                if (Math.random() > 0.5 && !scope.hasBinding('_pgrwcm')) {
                     const keyStringLiteral = t.stringLiteral(encodingKey);
                     keyStringLiteral[seen] = true;
-
-                    if (!scope[scopeKeyVarName]) {
-                        keyVarName = path.scope.generateUidIdentifier('_ec');
-                        scope.push({
-                            id: keyVarName,
-                            init: keyStringLiteral
-                        });
-                        scope[scopeKeyVarName] = keyVarName;
-                    }
 
                     const encodedStringLiteral = t.stringLiteral(encrypt(node.value, encodingKey));
                     encodedStringLiteral[seen] = true;
 
                     const callExpression = t.callExpression(
                         decryptFuncMemberExpr,
-                        [encodedStringLiteral, scope[scopeKeyVarName]]
+                        [encodedStringLiteral]
                     );
 
                     path.replaceWith(callExpression);
                     return;
                 }
 
-                if (Math.random() > 0.5) {
+                if (Math.random() > 0.8) {
                     const getterFunctionName = path.scope.generateUidIdentifier('_sg');
                     const functionContent = t.BlockStatement([
                         t.ReturnStatement(t.stringLiteral(node.value))
@@ -200,8 +177,6 @@ module.exports = ({ types: t, traverse }) => {
                         init: stringLiteral
                     });
                 });
-
-                console.log('varNames', varNames);
 
                 const replacement = template(getConcatenated(varNames))();
                 path.replaceWith(replacement);

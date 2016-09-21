@@ -214,7 +214,7 @@ module.exports = ({ types: t }) => {
                 // is running on this on single files before bundling. Therefore we
                 // need to achieve as much determinisim and we will not do any frequency
                 // sorting on the character set. Currently the number is pretty arbitrary.
-                const shouldConsiderSource = path.getSource().length > 70000;
+                const shouldConsiderSource = path.getSource().length > 0;
 
                 const charset = new Charset(shouldConsiderSource);
 
