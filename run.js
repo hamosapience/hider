@@ -9,6 +9,7 @@ var nameMangler = require('./name_mangler');
 var constantFolding = require('./constant_folding');
 var minifyReplace = require('./minify_replace');
 var stringSplitter = require('./string_splitter');
+var ladderMix = require('./ladder_mix2');
 
 var replacer = [minifyReplace, {
     "replacements": [{
@@ -40,21 +41,25 @@ const pluginFilter = () => {
 var fileName = process.argv[2];
 
 fs.readFile(fileName, function(err, data) {
-  if(err) throw err;
+    if(err) throw err;
 
-  var src = data.toString();
+    var src = data.toString();
 
-  var out = babel.transform(src, {
-      compact: false,
-      minified: false,
-      comments: false,
-      plugins: [
-          replacer,
-          constantFolding,
-          stringSplitter,
-          [nameMangler, {blacklist: {_pgrwcm: true}}],
-      ].concat(babiliAlwaysPlugins).concat(babiliPlugins.filter(pluginFilter)),
-  });
+    src = ladderMix(src);
 
-  console.log(out.code);
+    console.log(src);
+
+    // var out = babel.transform(src, {
+    //     compact: false,
+    //     minified: false,
+    //     comments: false,
+    //     plugins: [
+    //         replacer,
+    //         constantFolding,
+    //         stringSplitter,
+    //         [nameMangler, {blacklist: {_pgrwcm: true}}],
+    //     ].concat(babiliAlwaysPlugins).concat(babiliPlugins.filter(pluginFilter)),
+    // });
+    //
+    // console.log(out.code);
 });

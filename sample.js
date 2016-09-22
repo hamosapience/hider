@@ -1,18 +1,22 @@
 //original
 function test(a, b, c) {
-    var t = "superstr";
-    var e = t.split(a);
-    if (c)
-        return e.length / b;
-    else
-        return e.length * b;
-}
-
-//generated
-function test(a, b, c) {
-    var s = "s", r = "r";
-    var t = s + "upe" + r;
-    t += s + "t" + r;
-    var l = t.split(a).length;
-    return c ? (l / b) : (l * b);
+    /*%BEGIN_MIX%*/
+        /*%BEGIN_BLOCK%*/
+            var t = "superstr";
+            var e = t.split(a);
+        /*%END_BLOCK%*/
+        if (c)
+        /*%BEGIN_BLOCK%*/
+            asdf
+            /*%BEGIN_MIX%*/
+                asdf1
+                asdf2
+            /*%END_MIX%*/
+            /*%BEGIN_BLOCK%*/
+                return e.length / b;
+                return e.length * b;
+            /*%END_BLOCK%*/
+            foo
+        /*%END_BLOCK%*/
+    /*%END_MIX%*/
 }

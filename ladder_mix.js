@@ -62,3 +62,5 @@ function ladder_mix(codeStr) {
         index += mixStart(index);
     }
 }
+
+module.exports = ladder_mix;

