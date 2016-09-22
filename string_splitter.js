@@ -10,10 +10,18 @@ import _ from 'lodash';
 const CHARSET = ("abcdefghijklmnopqrstuvwxyz" +
 "ABCDEFGHIJKLMNOPQRSTUVWXYZ$_").split("");
 
+const getRandomChar = () => {
+    const randomIndex = Math.floor(Math.random() * (CHARSET.length - 1));
+    return CHARSET[randomIndex];
+};
+
 const encrypt = function(str, key) {
     var result = '';
     for (var i=0; i<str.length; i++) {
-        result += String.fromCharCode( key ^ str.charCodeAt(i) );
+        var r = str.charCodeAt(i);
+        var k = key;
+        var x = (!k & r) | (k & !r);
+        result += String.fromCharCode( k ^ r );
 
     }
     return result;
@@ -84,7 +92,7 @@ module.exports = ({ types: t, traverse }) => {
                 }
             },
 
-            Expression(path) {
+            StringLiteral(path) {
 
                 if (!path.isStringLiteral()) {
                     return;
@@ -120,20 +128,19 @@ module.exports = ({ types: t, traverse }) => {
                     return;
                 }
 
-                if (Math.random() > 0.8) {
+                if (Math.random() > 0.5) {
                     const getterFunctionName = path.scope.generateUidIdentifier('_sg');
-                    const functionContent = t.BlockStatement([
-                        t.ReturnStatement(t.stringLiteral(node.value))
-                    ]);
-                    const f = t.functionExpression(
-                        null,
-                        [],
-                        functionContent
-                    );
+
+                    const randomVarName = getRandomChar() + getRandomChar() + getRandomChar();
+                    const tmpl = template(`(function() {var VARNAME=STRING; return VARNAME;})`);
+                    const renderedTmpl = tmpl({
+                        VARNAME: t.identifier(randomVarName),
+                        STRING: t.stringLiteral(node.value)
+                    });
 
                     scope.push({
                         id: getterFunctionName,
-                        init: f
+                        init: renderedTmpl.expression
                     });
 
                     path.replaceWith(t.callExpression(
@@ -148,9 +155,7 @@ module.exports = ({ types: t, traverse }) => {
                 const used = new Set();
 
                 const getNext = () => {
-                    const randomIndex1 = Math.floor(Math.random() * (CHARSET.length - 1));
-                    const randomIndex2 = Math.floor(Math.random() * (CHARSET.length - 1));
-                    return CHARSET[randomIndex1] + CHARSET[randomIndex2];
+                    return getRandomChar() + getRandomChar();
                 };
 
                 const varNames = stringChunks.map(() => {
