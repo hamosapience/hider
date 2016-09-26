@@ -46,6 +46,20 @@ const splitString = (s) => {
     return chunks;
 };
 
+const shuffleArray = (array) => {
+    let counter = array.length;
+
+    while (counter > 0) {
+        let index = Math.floor(Math.random() * counter);
+        counter--;
+        let temp = array[counter];
+        array[counter] = array[index];
+        array[index] = temp;
+    }
+
+    return array;
+};
+
 const getConcatenated = (vars) => {
     const choose = Math.random() * 3;
 
@@ -173,14 +187,18 @@ module.exports = ({ types: t, traverse }) => {
                     return next;
                 });
 
-                stringChunks.forEach((chunk, i) => {
+                const declarations = stringChunks.map((chunk, i) => {
                     const stringLiteral = t.stringLiteral(chunk);
                     stringLiteral[seen] = true;
 
-                    scope.push({
+                    return {
                         id: t.identifier(varNames[i]),
                         init: stringLiteral
-                    });
+                    };
+                });
+
+                shuffleArray(declarations).forEach(decl => {
+                    scope.push(decl);
                 });
 
                 const replacement = template(getConcatenated(varNames))();

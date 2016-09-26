@@ -47,19 +47,17 @@ fs.readFile(fileName, function(err, data) {
 
     src = ladderMix(src);
 
-    console.log(src);
+    var out = babel.transform(src, {
+        compact: false,
+        minified: false,
+        comments: false,
+        plugins: [
+            replacer,
+            constantFolding,
+            stringSplitter,
+            [nameMangler, {blacklist: {_pgrwcm: true}}],
+        ].concat(babiliAlwaysPlugins).concat(babiliPlugins.filter(pluginFilter)),
+    });
 
-    // var out = babel.transform(src, {
-    //     compact: false,
-    //     minified: false,
-    //     comments: false,
-    //     plugins: [
-    //         replacer,
-    //         constantFolding,
-    //         stringSplitter,
-    //         [nameMangler, {blacklist: {_pgrwcm: true}}],
-    //     ].concat(babiliAlwaysPlugins).concat(babiliPlugins.filter(pluginFilter)),
-    // });
-    //
-    // console.log(out.code);
+    console.log(out.code);
 });
