@@ -4,7 +4,6 @@ require("babel-register");
 var fs = require('fs');
 var babel = require('babel-core');
 
-var moriscript = require('./moriscript');
 var nameMangler = require('./name_mangler');
 var constantFolding = require('./constant_folding');
 var minifyReplace = require('./minify_replace');
